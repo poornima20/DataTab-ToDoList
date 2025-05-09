@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo List - DataTab</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div>
+        <div class="container">
+          
+          <div class="header-container">
+
+            <h1>To-Do List</h1> 
+
+            <label class="mini-toggle">
+              <input type="checkbox" id="actionsToggle">
+              <span class="mini-slider"></span>
+              <span class="toggle-label">Edit</span>
+            </label>
+
+          </div>    
+        
+          <div class="input-group">
+              <input type="text" id="taskInput" placeholder="Type list here ... " />
+              <button onclick="addTask()">Add</button>
+          </div>
+         
+          <ul id="taskList"></ul>
+
+        </div> 
+
+        <footer class="footer">
+          <p>© 2025 Fullmoon</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
