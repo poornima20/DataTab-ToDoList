@@ -18,7 +18,8 @@
           <div class="header-container">
 
             <h1>To-Do List</h1> 
-
+          
+          <!-- Edit Toggle button here -->
             <label class="mini-toggle">
               <input type="checkbox" id="actionsToggle">
               <span class="mini-slider"></span>
@@ -27,8 +28,39 @@
 
           </div>    
         
+          <!-- Categories button here -->
+          <div class="filters" id="categoryFilters">            
+            <button id="addCategoryBtn">+ Category</button>
+          </div>
+
+          <!-- Pop up for adding categories-->
+          <div id="categoryModal" class="modal hidden">
+            <div class="modal-content">
+              <h3>Add New Category</h3>
+              <input type="text" id="newCategoryName" placeholder="Category name">
+              <div class="color-options">
+                <span class="color" data-color="#FBF8CC" style="background:#FBF8CC"></span>
+                <span class="color" data-color="#FDE4CF" style="background:#FDE4CF"></span>
+                <span class="color" data-color="#FFCFD2" style="background:#FFCFD2"></span>
+                <span class="color" data-color="#F1C0E8" style="background:#F1C0E8"></span>
+                <span class="color" data-color="#CFBAF0" style="background:#CFBAF0"></span>
+                <span class="color" data-color="#A3C4F3" style="background:#A3C4F3"></span>
+                <span class="color" data-color="#90DBF4" style="background:#90DBF4"></span>
+                <span class="color" data-color="#8EECF5" style="background:#8EECF5"></span>
+                <span class="color" data-color="#98F5E1" style="background:#98F5E1"></span>
+                <span class="color selected" data-color="#B9FBC0" style="background:#B9FBC0"></span>
+              </div>
+              <div class="modal-actions">
+                <button id="cancelCategory">Cancel</button>
+                <button id="saveCategory">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- for adding lists -->
           <div class="input-group">
-              <input type="text" id="taskInput" placeholder="Type list here ... " />
+              <input type="text" id="taskInput" placeholder="Select a category first..." disabled>
+              </select>
               <button onclick="addTask()">Add</button>
           </div>
          
