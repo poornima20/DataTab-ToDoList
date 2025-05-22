@@ -10,6 +10,13 @@ let tasks = [
   let currentFilter = 'All';
   let categories = ['All', 'Work', 'Personal'];  
 
+    //pop Up code 
+  let customCategories = [
+    { name: 'All', color: '#ffffff' },
+    { name: 'Work', color: '#cbd5ff' },
+    { name: 'Personal', color: '#ffd7c2' }
+  ];
+
  // Initialize on load  
   document.addEventListener('DOMContentLoaded', () => {   
     const toggle = document.getElementById('actionsToggle');   // Load toggle state 
@@ -23,7 +30,16 @@ let tasks = [
     if (savedTasks) {  
       tasks = JSON.parse(savedTasks);  
     }  
+
+    // Load custom categories
+    const stored = localStorage.getItem('customCategories');
+    if (stored) {
+        customCategories = JSON.parse(stored);
+    }
+
     renderTasks();  
+    renderCategoryFilters();
+    setupCategoryModal();
 
     document.getElementById('taskInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -35,11 +51,12 @@ let tasks = [
   
   // Toggle actions visibility  
   document.getElementById('actionsToggle').addEventListener('change', function() {  
-    const actionIcons = document.querySelectorAll('.icons, .filters, .drag-handle');  
+    const actionIcons = document.querySelectorAll('.icons, .drag-handle, #addCategoryBtn');  
     actionIcons.forEach(icon => {  
       icon.style.display = this.checked ? 'flex' : 'none';  
     });  
     localStorage.setItem('showActions', this.checked);  
+     renderCategoryFilters()
   });
    
   
@@ -431,25 +448,89 @@ function createTaskElement(task, parent) {
     renderTasks();
 }
 
-  //pop Up code 
-  let customCategories = [
-    { name: 'All', color: '#ffffff' },
-    { name: 'Work', color: '#cbd5ff' },
-    { name: 'Personal', color: '#ffd7c2' }
-  ];
 
-  function renderCategoryFilters() {
+
+ function renderCategoryFilters() {
     const filterContainer = document.getElementById('categoryFilters');
     filterContainer.innerHTML = ''; // Only clear once
     
     customCategories.forEach(cat => {
+        const btnWrapper = document.createElement('div');
+        btnWrapper.className = 'category-wrapper';
+        
         const btn = document.createElement('button');
-        btn.id = 'newSectionName';
+         btn.id = 'newSectionName';
         btn.textContent = cat.name;
         btn.style.background = cat.color;
         btn.addEventListener('click', () => filterTasks(cat.name));
         if (currentFilter === cat.name) btn.classList.add('active');
-        filterContainer.appendChild(btn);
+        
+        // Add close button (only for non-default categories)
+        if (cat.name !== 'All') {
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'category-close-btn';
+            closeBtn.innerHTML = '&#10006;';
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm(`Delete category "${cat.name}" and all its tasks?`)) {
+                    // Delete tasks in this category first
+                    tasks = tasks.filter(task => task.category !== cat.name);
+                    // Then delete the category
+                    customCategories = customCategories.filter(c => c.name !== cat.name);
+                    // If we were filtering by this category, switch to All
+                    if (currentFilter === cat.name) {
+                        currentFilter = 'All';
+                        filterTasks('All');
+                    }
+                    renderCategoryFilters();
+                    // Save to localStorage
+                    localStorage.setItem('customCategories', JSON.stringify(customCategories));
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                }
+            });
+            btnWrapper.appendChild(closeBtn);
+        }
+        
+        // Make category name editable when toggle is on
+        const toggle = document.getElementById('actionsToggle');
+        if (toggle.checked) {
+            btn.contentEditable = true;
+            btn.addEventListener('blur', () => {
+                const newName = btn.textContent.trim();
+                if (newName && newName !== cat.name && !customCategories.find(c => c.name === newName)) {
+                    // Update category name in customCategories
+                    cat.name = newName;
+                    // Update category name in all tasks
+                    tasks.forEach(task => {
+                        if (task.category === cat.name) {
+                            task.category = newName;
+                        }
+                    });
+                    // If we were filtering by this category, update currentFilter
+                    if (currentFilter === cat.name) {
+                        currentFilter = newName;
+                    }
+                    // Save changes
+                    localStorage.setItem('customCategories', JSON.stringify(customCategories));
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                } else {
+                    // Revert if invalid
+                    btn.textContent = cat.name;
+                }
+            });
+            
+            btn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btn.blur();
+                }
+            });
+        } else {
+            btn.contentEditable = false;
+        }
+        
+        btnWrapper.appendChild(btn);
+        filterContainer.appendChild(btnWrapper);
     });
     
     // Add "+ Category" button
@@ -459,10 +540,10 @@ function createTaskElement(task, parent) {
     addBtn.addEventListener('click', () => {
         document.getElementById('categoryModal').classList.remove('hidden');
     });
-  
-
     filterContainer.appendChild(addBtn);
 }
+
+
 
 
   function setupCategoryModal() {
