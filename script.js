@@ -55,6 +55,12 @@ let tasks = [
     actionIcons.forEach(icon => {  
       icon.style.display = this.checked ? 'flex' : 'none';  
     });  
+
+    // Special case for drag handles since they're not flex
+    document.querySelectorAll('.drag-handle').forEach(handle => {
+    handle.style.display = this.checked ? 'inline-block' : 'none';
+    });
+
     localStorage.setItem('showActions', this.checked);  
      renderCategoryFilters()
   });
@@ -126,7 +132,7 @@ function createTaskElement(task, parent) {
                id="task-${task.id}">  
         <label for="task-${task.id}" class="${task.completed ? 'strikethrough' : ''}">  
           ${task.text} 
-          ${currentFilter === 'All' ? `<span class="task-category">${task.category}</span>` : ''}
+          ${currentFilter === 'All' ? `<span class="task-category" style="background: ${getCategoryColor(task.category)}">${task.category}</span>` : ''}
         </label>  
       </div>  
       <div class="icons" style="display: ${document.getElementById('actionsToggle').checked ? 'flex' : 'none'}">  
@@ -136,6 +142,7 @@ function createTaskElement(task, parent) {
     `;
 
     const dragHandle = li.querySelector('.drag-handle');
+    dragHandle.style.display = document.getElementById('actionsToggle').checked ? 'inline-block' : 'none';
     
     // Touch/Mouse variables
     let isDragging = false;
@@ -426,7 +433,11 @@ function createTaskElement(task, parent) {
     renderTasks();
   }
 }
-   
+   // Add this new function to get category color
+function getCategoryColor(categoryName) {
+    const category = customCategories.find(cat => cat.name === categoryName);
+    return category ? category.color : '#e0e0e0'; // default light gray if not found
+}
   
   // Filter tasks  
   function filterTasks(category) {
