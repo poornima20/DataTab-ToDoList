@@ -70,9 +70,16 @@ let tasks = [
   function renderTasks() {  
     const list = document.getElementById('taskList');  
     list.innerHTML = '';  
-    const filtered = tasks.filter(task =>  // Filter tasks based on current filter  
-      currentFilter === 'All' || task.category === currentFilter  
-    );   
+
+    let filtered;
+    if(currentFilter === 'All'){
+      filtered = tasks.filter(task => !task.completed);
+    }
+    else{
+      filtered = tasks.filter(task => task.category === currentFilter);
+    }
+    
+    //const filtered = tasks.filter(task => currentFilter === 'All' || task.category === currentFilter);   
 
     document.querySelectorAll('.task-category').forEach(el => {
     el.style.display = currentFilter === 'All' ? 'inline' : 'none';
