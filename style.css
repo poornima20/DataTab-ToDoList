@@ -37,6 +37,22 @@ h1 {
   margin-bottom: 1rem;
 }
 
+.calendar-btn {
+  font-size: 1.5rem;     /* small but visible */
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+  color: #000000;
+  margin: 0;
+}
+.calendar-btn:hover {
+  transition: background 0.2s ease;
+  color: grey;
+}
+
+
+
+
  /* Mini toggle switch styling */
 
 .mini-toggle {
