@@ -38,16 +38,30 @@ h1 {
 }
 
 .calendar-btn {
-  font-size: 1.5rem;     /* small but visible */
-  text-decoration: none;
-  color: black;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-style: italic;
   color: #000000;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
   margin: 0;
+  display: inline-block;
+  transition: transform 0.25s ease, color 0.25s ease, text-shadow 0.25s ease;
 }
-.calendar-btn:hover {
-  transition: background 0.2s ease;
-  color: grey;
+
+/* Hide actual symbol text */
+.calendar-btn::before {
+  content: "\2691"; /* ⚐ (&#9872;) */
+  display: inline-block;
+  transition: all 0.25s ease;
+}
+
+/* Change to ⚑ (&#9873;) on hover */
+.calendar-btn:hover::before {
+  content: "\2690"; /* ⚑ (&#9873;) */
+  color: #444;
+  transform: scale(1.15) rotate(5deg);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -131,7 +145,17 @@ h1 {
     opacity: 1;
     font-size: 0.9rem;
   }
- 
+
+  /* When input is focused (clicked), hide placeholder */
+  .input-group input:focus::placeholder {
+    color: transparent;
+  }
+
+  /* Hover effect only when input is disabled */
+  .input-group input[disabled]:hover::placeholder {
+    color: #c6c6c6; /* darken on hover */
+    cursor: not-allowed;
+  } 
 
   .input-group input {
     flex: 1;
@@ -590,6 +614,58 @@ button[contenteditable="true"] {
     outline: 2px dashed rgba(0,0,0,0.2);
     padding-right: 20px; /* Make space for close button */
 }
+
+
+
+/* Info Modal (About + Calendar link) */
+#infoModal{
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+#infoModal .modal-content {
+  position: relative;
+  padding: 15px 0px;
+  border-radius: 12px;
+  background: white;  
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+.info-text {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+#openCalendar {
+  background: #000000;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#openCalendar:hover {
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+}
+
 
 
 

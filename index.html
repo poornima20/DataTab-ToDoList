@@ -24,8 +24,8 @@
               <input type="checkbox" id="actionsToggle">
               <span class="mini-slider"></span>
               <span class="toggle-label">Edit</span>
-              <a href="https://poornima20.github.io/CalenderTab-DataTab/"  class="calendar-btn" target="_blank" title="Open Calendar">
-              &#128467;&#xFE0E</a>
+              <span class="calendar-btn" id="openInfo" title="About To-Do List"></span>
+
             </label>
 
           </div>    
@@ -59,9 +59,29 @@
             </div>
           </div>
 
+          <!-- About / Calendar Popup -->
+          <div id="infoModal" class="modal hidden">
+            <div class="modal-content">
+              <span id="closeInfoModal" class="close-btn">&times;</span>
+              <h3>About To-Do List</h3>
+              <p class="info-text">
+                To-Do List helps to sort your work and life into simple categories.
+                Create as many categories as you want, add tasks under them, and mark them when done.<br><br>
+                Turn on <b>“ Edit”</b> mode anytime to rename, delete, or reorder your categories easily.  
+                <br>Use the <b>“+ Category”</b> button to create your own sections, and toggle “Edit” mode to rename or remove categories.  
+                <br><br>
+                You can also add dates to your tasks! <br>
+                Try the Calendar to plan with your tasks here.
+              </p>
+              <div class="modal-actions">
+                <button id="openCalendar">Go to Calendar</button>
+              </div>
+            </div>
+          </div>
+
           <!-- for adding lists -->
           <div class="input-group">
-              <input type="text" id="taskInput" placeholder="Select a category first..." disabled>
+              <input type="text" id="taskInput" placeholder="Select a category from above ..." disabled>
               </select>
               <button onclick="addTask()">Add</button>
           </div>

@@ -134,7 +134,7 @@ function createTaskElement(task, parent) {
 
     li.innerHTML = `  
       <div class="left">
-        <span class="drag-handle">⋮⋮</span>   
+        <span class="drag-handle" title="Reorder Task">⋮⋮</span>   
         <input type="checkbox" ${task.completed ? 'checked' : ''}  
                id="task-${task.id}">  
         <label for="task-${task.id}" class="${task.completed ? 'strikethrough' : ''}">  
@@ -143,8 +143,8 @@ function createTaskElement(task, parent) {
         </label>  
       </div>  
       <div class="icons" style="display: ${document.getElementById('actionsToggle').checked ? 'flex' : 'none'}">  
-        <span class="edit-btn">&#9998</span>  
-        <span class="delete-btn">&#10006;</span>  
+        <span class="edit-btn" title="Edit Task">&#9998</span>  
+        <span class="delete-btn" title="Delete Task">&#10006;</span>  
       </div>  
     `;
 
@@ -457,7 +457,7 @@ function getCategoryColor(categoryName) {
     
     // Enable/disable input based on category selection
     if (category === 'All') {
-        taskInput.placeholder = "Select a category first...";
+        taskInput.placeholder = "Select a category from above ...";
         taskInput.disabled = true;
     } else {
         taskInput.placeholder = "Add a new task..."; 
@@ -610,3 +610,34 @@ function getCategoryColor(categoryName) {
     renderCategoryFilters();
     setupCategoryModal();
   });
+
+  document.addEventListener('DOMContentLoaded', () => {
+  const infoModal = document.getElementById('infoModal');
+  const calendarBtn = document.querySelector('.calendar-btn');
+  const closeInfo = document.getElementById('closeInfoModal');
+  const openCalendar = document.getElementById('openCalendar');
+
+  // When calendar icon is clicked → open popup
+  calendarBtn.addEventListener('click', (e) => {
+    e.preventDefault(); // prevent direct link
+    infoModal.classList.remove('hidden');
+  });
+
+  // Close modal
+  closeInfo.addEventListener('click', () => {
+    infoModal.classList.add('hidden');
+  });
+
+  // Button inside modal → open calendar page
+  openCalendar.addEventListener('click', () => {
+    window.open('https://poornima20.github.io/CalenderTab-DataTab/', '_blank');
+  });
+
+  // Optional: close on outside click
+  window.addEventListener('click', (e) => {
+    if (e.target === infoModal) {
+      infoModal.classList.add('hidden');
+    }
+  });
+});
+
