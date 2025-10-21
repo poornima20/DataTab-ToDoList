@@ -17,6 +17,14 @@ body {
     margin-bottom: 20%;
   }
 
+  /* 📱 Slight shrink on mobile */
+@media (max-width: 480px) {
+  .container {
+    width: 310px;  /* just 5px smaller */
+    padding: 16px; /* optional: slightly tighter padding */
+  }
+}
+
 
 /* Tile and Toggle*/
 
@@ -531,7 +539,7 @@ footer{
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid #e0e0e0;
+  border: 1px solid transparent;
   background-color: white;
   color: #333;
   box-sizing: border-box;
@@ -616,56 +624,28 @@ button[contenteditable="true"] {
 }
 
 
-
-/* Info Modal (About + Calendar link) */
-#infoModal{
-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-#infoModal .modal-content {
-  position: relative;
-  padding: 15px 0px;
-  border-radius: 12px;
-  background: white;  
-}
-
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #555;
-  transition: color 0.2s ease;
-}
-
-.close-btn:hover {
-  color: #000;
-}
-
-.info-text {
-  font-size: 0.9rem;
-  color: #444;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
-
-#openCalendar {
-  background: #000000;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
+.completed-section-header {
+  text-align: center;
+  background: transparent;       /* light background */
+  color: #444;               /* text color */
+  font-size: 0.85rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  padding: 12px;
+  margin-top: 40px;
+  border-radius: 12px;
+  display: inline-block;
+  width: 100%;
+  letter-spacing: 0.3px;
+  text-align: left;
 }
 
-#openCalendar:hover {
-  background: #ffffff;
-  color: rgb(0, 0, 0);
+.completed-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin-right: 6px;
+  color: #4caf50;  /* green ✅ */
 }
-
 
 
 

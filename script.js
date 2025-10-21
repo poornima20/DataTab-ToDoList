@@ -71,15 +71,7 @@ let tasks = [
     const list = document.getElementById('taskList');  
     list.innerHTML = '';  
 
-    let filtered;
-    if(currentFilter === 'All'){
-      filtered = tasks.filter(task => !task.completed);
-    }
-    else{
-      filtered = tasks.filter(task => task.category === currentFilter);
-    }
-    
-    //const filtered = tasks.filter(task => currentFilter === 'All' || task.category === currentFilter);   
+    const filtered = tasks.filter(task => currentFilter === 'All' || task.category === currentFilter);   
 
     document.querySelectorAll('.task-category').forEach(el => {
     el.style.display = currentFilter === 'All' ? 'inline' : 'none';
@@ -95,14 +87,18 @@ let tasks = [
     });
   
    
-      // Add completed separator if needed  
-    if (completedTasks.length > 0 && activeTasks.length > 0) {  
-      const separator = document.createElement('div');  
-      separator.className = 'completed-separator';  
-      separator.textContent = '';  
-      list.appendChild(separator);  
+     // Add completed section banner if there are completed tasks
+    if (completedTasks.length > 0) {
+      const completedHeader = document.createElement('div');
+      completedHeader.className = 'completed-section-header';
+      completedHeader.innerHTML = `
+      <i data-lucide="check-circle" class="completed-icon"></i>
+      Completed Tasks
+    `;
+      list.appendChild(completedHeader);
+      lucide.createIcons();
     }
-  
+
     // Render completed tasks  
     completedTasks.forEach(task => {  
       createTaskElement(task, list);  
@@ -335,7 +331,7 @@ function createTaskElement(task, parent) {
     const checkbox = li.querySelector('input');  
     checkbox.addEventListener('change', () => toggleTask(task.id));  
     const label = li.querySelector('label');  
-    label.addEventListener('click', () => toggleTask(task.id));   
+    //label.addEventListener('click', () => toggleTask(task.id));   
 
     
     const deleteBtn = li.querySelector('.delete-btn');  
@@ -611,33 +607,4 @@ function getCategoryColor(categoryName) {
     setupCategoryModal();
   });
 
-  document.addEventListener('DOMContentLoaded', () => {
-  const infoModal = document.getElementById('infoModal');
-  const calendarBtn = document.querySelector('.calendar-btn');
-  const closeInfo = document.getElementById('closeInfoModal');
-  const openCalendar = document.getElementById('openCalendar');
-
-  // When calendar icon is clicked → open popup
-  calendarBtn.addEventListener('click', (e) => {
-    e.preventDefault(); // prevent direct link
-    infoModal.classList.remove('hidden');
-  });
-
-  // Close modal
-  closeInfo.addEventListener('click', () => {
-    infoModal.classList.add('hidden');
-  });
-
-  // Button inside modal → open calendar page
-  openCalendar.addEventListener('click', () => {
-    window.open('https://poornima20.github.io/CalenderTab-DataTab/', '_blank');
-  });
-
-  // Optional: close on outside click
-  window.addEventListener('click', (e) => {
-    if (e.target === infoModal) {
-      infoModal.classList.add('hidden');
-    }
-  });
-});
-
+  

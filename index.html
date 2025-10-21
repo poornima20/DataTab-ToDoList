@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div>
@@ -24,8 +25,6 @@
               <input type="checkbox" id="actionsToggle">
               <span class="mini-slider"></span>
               <span class="toggle-label">Edit</span>
-              <span class="calendar-btn" id="openInfo" title="About To-Do List"></span>
-
             </label>
 
           </div>    
@@ -59,26 +58,6 @@
             </div>
           </div>
 
-          <!-- About / Calendar Popup -->
-          <div id="infoModal" class="modal hidden">
-            <div class="modal-content">
-              <span id="closeInfoModal" class="close-btn">&times;</span>
-              <h3>About To-Do List</h3>
-              <p class="info-text">
-                To-Do List helps to sort your work and life into simple categories.
-                Create as many categories as you want, add tasks under them, and mark them when done.<br><br>
-                  
-                Use the <b>“+ Category”</b> button to create your own sections and add tasks under these Categories.<br>
-                Turn on <b>“ Edit”</b> mode anytime to rename, delete, or reorder your categories or Tasks. 
-                <br><br>
-                You can also add dates to your tasks! <br>
-                Try the Calendar to plan with your tasks here.
-              </p>
-              <div class="modal-actions">
-                <button id="openCalendar">Go to Calendar</button>
-              </div>
-            </div>
-          </div>
 
           <!-- for adding lists -->
           <div class="input-group">
