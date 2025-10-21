@@ -336,15 +336,25 @@ function createTaskElement(task, parent) {
     const label = li.querySelector('label');  
     //label.addEventListener('click', () => toggleTask(task.id));   
 
-    
-    const deleteBtn = li.querySelector('.delete-btn');  
-    deleteBtn.addEventListener('click', (e) => {  
-      e.stopPropagation();  
-      deleteTask(task.id);
-      });  
-    
-    const editBtn = li.querySelector('.edit-btn');
-    editBtn.addEventListener('click', (e) => {
+    parent.appendChild(li);
+
+// Render Lucide icons (replaces <i> with <svg>)
+if (window.lucide && typeof lucide.createIcons === 'function') {
+  lucide.createIcons();
+}
+
+// ✅ Use delegation so clicks on <svg> or inner <path> still work
+const iconsWrap = li.querySelector('.icons');
+iconsWrap.addEventListener('click', (e) => {
+  // Delete
+  if (e.target.closest('.delete-btn')) {
+    e.stopPropagation();
+    deleteTask(task.id);
+    return;
+  }
+
+  // Edit
+  if (e.target.closest('.edit-btn')) {
     e.stopPropagation();
     const label = li.querySelector('label');
     const input = document.createElement('input');
@@ -356,28 +366,25 @@ function createTaskElement(task, parent) {
     input.focus();
 
     const saveEdit = () => {
-        const newText = input.value.trim();
-        if (newText !== '') {
-            task.text = newText;
-            // Don't change category when editing
-            renderTasks();
-        } else {
-            input.replaceWith(label);
-        }
+      const newText = input.value.trim();
+      if (newText !== '') {
+        task.text = newText;
+        renderTasks();
+      } else {
+        input.replaceWith(label);
+      }
     };
-    
+
     input.addEventListener('blur', saveEdit);
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            saveEdit();
-        }
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') saveEdit();
     });
+  }
 });
+
     
-     
- 
-    parent.appendChild(li);  
-    lucide.createIcons();
+    
+    
   }  
 
   //Update Task Order
