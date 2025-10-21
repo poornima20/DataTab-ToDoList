@@ -139,9 +139,10 @@ function createTaskElement(task, parent) {
         </label>  
       </div>  
       <div class="icons" style="display: ${document.getElementById('actionsToggle').checked ? 'flex' : 'none'}">  
-        <span class="edit-btn" title="Edit Task">&#9998</span>  
-        <span class="delete-btn" title="Delete Task">&#10006;</span>  
-      </div>  
+        <i data-lucide="pencil" class="edit-btn" title="Edit Task"></i>
+        <i data-lucide="trash-2" class="delete-btn" title="Delete Task"></i>
+      </div>
+ 
     `;
 
     const dragHandle = li.querySelector('.drag-handle');
@@ -155,6 +156,8 @@ function createTaskElement(task, parent) {
     let draggedItem = null;
     let placeholder = document.createElement('div');
     placeholder.className = 'drag-placeholder';
+    
+
 
     // Initialize drag handle for both touch and mouse
     function initDrag(e) {
@@ -374,6 +377,7 @@ function createTaskElement(task, parent) {
      
  
     parent.appendChild(li);  
+    lucide.createIcons();
   }  
 
   //Update Task Order
