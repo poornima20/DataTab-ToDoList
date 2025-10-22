@@ -1,10 +1,10 @@
 // Default Tasks with completed status
 
 let tasks = [
-    { id: 1, text: 'Learn to use ToDo', category: 'Work', completed: false },  
-    { id: 2, text: 'Read a book', category: 'Personal', completed: false },  
-    { id: 3, text: 'Walk the dog', category: 'Personal', completed: false },  
-    { id: 4, text: 'Do the laundry', category: 'Personal', completed: false }
+    { id: 1, text: 'Learn to use ToDo', category: 'Work', completed: false , dueDate: null},  
+    { id: 2, text: 'Read a book', category: 'Personal', completed: false , dueDate: null},  
+    { id: 3, text: 'Walk the dog', category: 'Personal', completed: false , dueDate: null},  
+    { id: 4, text: 'Do the laundry', category: 'Personal', completed: false , dueDate: null}
   ];
   
   let currentFilter = 'All';
@@ -46,24 +46,24 @@ let tasks = [
         addTask();
       }
     });
-  });
-  
-  
-  // Toggle actions visibility  
-  document.getElementById('actionsToggle').addEventListener('change', function() {  
-    const actionIcons = document.querySelectorAll('.icons, .drag-handle, #addCategoryBtn');  
-    actionIcons.forEach(icon => {  
-      icon.style.display = this.checked ? 'flex' : 'none';  
-    });  
 
-    // Special case for drag handles since they're not flex
-    document.querySelectorAll('.drag-handle').forEach(handle => {
-    handle.style.display = this.checked ? 'inline-block' : 'none';
+        // Show/hide edit/delete + (if you ever bring it back) drag handles
+      document.getElementById('actionsToggle').addEventListener('change', function () {
+      const actionIcons = document.querySelectorAll('.icons, #addCategoryBtn');
+      actionIcons.forEach(icon => {
+        icon.style.display = this.checked ? 'flex' : 'none';
+      });
+
+      // persist preference
+      localStorage.setItem('showActions', this.checked);
+
+      // re-render buttons to reflect editable category names when toggle changes
+      renderCategoryFilters();
+      renderTasks();
     });
 
-    localStorage.setItem('showActions', this.checked);  
-     renderCategoryFilters()
   });
+  
    
   
   // Render tasks with completed at bottom  
@@ -102,19 +102,7 @@ let tasks = [
     // Render completed tasks  
     completedTasks.forEach(task => {  
       createTaskElement(task, list);  
-    });
-
-    // Add drop event listener
-    list.addEventListener('drop', (e) => {
-      e.preventDefault();
-      updateTaskOrder();
-    });
-    
-    list.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });  
-
-    
+    });   
   
      
     // Save to localStorage  
@@ -124,291 +112,147 @@ let tasks = [
      
   //Create individual task element  
 function createTaskElement(task, parent) {
-    const li = document.createElement('li');
-    li.className = task.completed ? 'completed' : '';
-    li.dataset.id = task.id;
+  const li = document.createElement('li');
+  li.className = task.completed ? 'completed' : '';
+  li.dataset.id = task.id;
 
-    li.innerHTML = `  
-      <div class="left">
-        <span class="drag-handle" title="Reorder Task">⋮⋮</span>   
-        <input type="checkbox" ${task.completed ? 'checked' : ''}  
-               id="task-${task.id}">  
-        <label for="task-${task.id}" class="${task.completed ? 'strikethrough' : ''}">  
-          ${task.text} 
-          ${currentFilter === 'All' ? `<span class="task-category" style="background: ${getCategoryColor(task.category)}">${task.category}</span>` : ''}
-        </label>  
-      </div>  
-      <div class="icons" style="display: ${document.getElementById('actionsToggle').checked ? 'flex' : 'none'}">  
-        <i data-lucide="pencil" class="edit-btn" title="Edit Task"></i>
-        <i data-lucide="trash-2" class="delete-btn" title="Delete Task"></i>
-      </div>
- 
-    `;
+li.innerHTML = `
+  <div class="left">
+    <button type="button" class="checkbox-btn" data-action="toggle" title="Mark as complete" aria-label="Mark as complete">
+      <i data-lucide="${task.completed ? 'check' : 'circle'}" class="checkbox-icon"></i>
+    </button>
+    <span class="task-text ${task.completed ? 'strikethrough' : ''}">
+      <span class="task-label" contenteditable="true">${task.text}</span>
 
-    const dragHandle = li.querySelector('.drag-handle');
-    dragHandle.style.display = document.getElementById('actionsToggle').checked ? 'inline-block' : 'none';
-    
-    // Touch/Mouse variables
-    let isDragging = false;
-    let startY = 0;
-    let currentY = 0;
-    let originalY = 0;
-    let draggedItem = null;
-    let placeholder = document.createElement('div');
-    placeholder.className = 'drag-placeholder';
-    
+      ${(task.dueDate || currentFilter === 'All') ? `
+        <div class="task-meta-line">
+          ${!task.completed && task.dueDate ? `<span class="task-due-date">${formatDueDate(task.dueDate)}</span>` : ''}
+          ${currentFilter === 'All' 
+            ? `<span class="task-category category-inline" contenteditable="false" style="background: ${getCategoryColor(task.category)}">${task.category}</span>` 
+            : ''
+          }
+        </div>
+      ` : ''}
+    </span>
+  </div>
+
+  <div class="icons" style="display: ${document.getElementById('actionsToggle').checked ? 'flex' : 'none'}">
+    ${!task.completed ? `<i data-lucide="clipboard-clock" class="schedule-btn" title="Set Date & Time"></i>` : ''}
+    <i data-lucide="trash-2" class="delete-btn" title="Delete Task"></i>
+  </div>
+`;
 
 
-    // Initialize drag handle for both touch and mouse
-    function initDrag(e) {
-        e.preventDefault();
-        isDragging = true;
-        draggedItem = li;
-        originalY = li.getBoundingClientRect().top;
-        
-        // Store initial position
-        if (e.type === 'mousedown') {
-            startY = e.clientY;
-        } else if (e.type === 'touchstart') {
-            startY = e.touches[0].clientY;
-        }
-        
-        // Prepare dragged item
-        li.classList.add('dragging');
-        li.style.width = li.offsetWidth + 'px';
-        li.style.height = li.offsetHeight + 'px';
-        li.style.position = 'fixed';
-        li.style.zIndex = '1000';
-        li.style.pointerEvents = 'none';
-        
-        // Create placeholder
-        placeholder.style.height = li.offsetHeight + 'px';
-        li.parentNode.insertBefore(placeholder, li);
-        
-        // Add document-wide listeners
-        document.addEventListener('mousemove', handleDragMove);
-        document.addEventListener('touchmove', handleDragMove, { passive: false });
-        document.addEventListener('mouseup', endDrag);
-        document.addEventListener('touchend', endDrag);
-        document.body.style.overflow = 'hidden';
+
+
+  // ✅ Toggle complete
+  li.addEventListener('click', (e) => {
+    if (e.target.closest('.checkbox-btn')) {
+      e.stopPropagation();
+      toggleTask(task.id);
     }
+  });
 
-    function handleDragMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        
-        // Get current position
-        currentY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
-        
-        // Move dragged item
-        li.style.top = (currentY - startY + originalY) + 'px';
-        
-        // Find closest item
-        const items = Array.from(document.querySelectorAll('#taskList li:not(.dragging)'));
-        let closestItem = null;
-        let closestDistance = Infinity;
-        
-        items.forEach(item => {
-            const rect = item.getBoundingClientRect();
-            const itemCenter = rect.top + rect.height / 2;
-            const distance = Math.abs(currentY - itemCenter);
-            
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestItem = item;
-            }
-            
-            // Reset highlight
-            item.classList.remove('drag-over-above', 'drag-over-below');
-        });
-        
-        // Highlight drop position
-        if (closestItem) {
-            const rect = closestItem.getBoundingClientRect();
-            if (currentY > rect.top + rect.height / 2) {
-                closestItem.classList.add('drag-over-below');
-            } else {
-                closestItem.classList.add('drag-over-above');
-            }
-        }
+  parent.appendChild(li);
+
+  // ✅ Lucide icons refresh
+  if (window.lucide && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+
+  // ✅ Delete handler
+  const iconsWrap = li.querySelector('.icons');
+  iconsWrap.addEventListener('click', (e) => {
+    if (e.target.closest('.delete-btn')) {
+      e.stopPropagation();
+      deleteTask(task.id);
     }
-
-    function endDrag() {
-        if (!isDragging) return;
-        
-        // Clean up events
-        document.removeEventListener('mousemove', handleDragMove);
-        document.removeEventListener('touchmove', handleDragMove);
-        document.removeEventListener('mouseup', endDrag);
-        document.removeEventListener('touchend', endDrag);
-        document.body.style.overflow = '';
-        
-        // Find drop position
-        const items = Array.from(document.querySelectorAll('#taskList li:not(.dragging)'));
-        let dropIndex = -1;
-        
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            const rect = item.getBoundingClientRect();
-            
-            if (currentY < rect.top + rect.height / 2) {
-                dropIndex = i;
-                break;
-            }
-        }
-        
-        if (dropIndex === -1) dropIndex = items.length;
-        
-        // Remove highlight classes
-        items.forEach(item => {
-            item.classList.remove('drag-over-above', 'drag-over-below');
-        });
-        
-        // Reset dragged item
-        li.classList.remove('dragging');
-        li.style.position = '';
-        li.style.top = '';
-        li.style.zIndex = '';
-        li.style.width = '';
-        li.style.height = '';
-        li.style.pointerEvents = '';
-        li.style.transform = '';
-        
-        // Remove placeholder
-        if (placeholder.parentNode) {
-            placeholder.parentNode.removeChild(placeholder);
-        }
-        
-        // Reorder tasks if needed
-        if (dropIndex !== -1) {
-            const draggedId = parseInt(li.dataset.id);
-            const draggedTask = tasks.find(t => t.id === draggedId);
-            
-            if (draggedTask) {
-                tasks = tasks.filter(t => t.id !== draggedId);
-                
-                // Find new position
-                let newIndex = dropIndex;
-                if (dropIndex > 0) {
-                    const prevTaskId = parseInt(items[dropIndex - 1]?.dataset.id);
-                    const prevTaskIndex = tasks.findIndex(t => t.id === prevTaskId);
-                    newIndex = prevTaskIndex + 1;
-                }
-                
-                tasks.splice(newIndex, 0, draggedTask);
-                renderTasks();
-            }
-        }
-        
-        isDragging = false;
-        draggedItem = null;
-    }
-
-    // Add event listeners
-    dragHandle.addEventListener('mousedown', initDrag);
-    dragHandle.addEventListener('touchstart', initDrag, { passive: false });
-
-    // Prevent text selection while dragging
-    dragHandle.addEventListener('selectstart', (e) => {
-        if (isDragging) e.preventDefault();
-    });
-
-    li.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      const draggingElement = document.querySelector('.dragging');
-      if (draggingElement && draggingElement != li){
-        const rect = li.getBoundingClientRect();
-         const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-        if (next) {
-          parent.insertBefore(draggingElement, li.nextSibling);
-        } else {
-          parent.insertBefore(draggingElement, li);
-        }
-      }
-    });
-
-
-   
-    // Add event listeners  
-    const checkbox = li.querySelector('input');  
-    checkbox.addEventListener('change', () => toggleTask(task.id));  
-    const label = li.querySelector('label');  
-    //label.addEventListener('click', () => toggleTask(task.id));   
-
-    parent.appendChild(li);
-
-// Render Lucide icons (replaces <i> with <svg>)
-if (window.lucide && typeof lucide.createIcons === 'function') {
-  lucide.createIcons();
-}
-
-// ✅ Use delegation so clicks on <svg> or inner <path> still work
-const iconsWrap = li.querySelector('.icons');
-iconsWrap.addEventListener('click', (e) => {
-  // Delete
+  });
+  iconsWrap.addEventListener('click', (e) => {
   if (e.target.closest('.delete-btn')) {
     e.stopPropagation();
     deleteTask(task.id);
-    return;
   }
-
-  // Edit
-  if (e.target.closest('.edit-btn')) {
+  if (e.target.closest('.schedule-btn')) {
     e.stopPropagation();
-    const label = li.querySelector('label');
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = task.text;
-    input.className = 'edit-input';
-
-    label.replaceWith(input);
-    input.focus();
-
-    const saveEdit = () => {
-      const newText = input.value.trim();
-      if (newText !== '') {
-        task.text = newText;
-        renderTasks();
-      } else {
-        input.replaceWith(label);
-      }
-    };
-
-    input.addEventListener('blur', saveEdit);
-    input.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') saveEdit();
-    });
+    openDateTimePopup(task.id);
   }
 });
 
-    
-    
-    
-  }  
 
-  //Update Task Order
-  function updateTaskOrder() {
-  const taskList = document.getElementById('taskList');
-  const newOrder = Array.from(taskList.children).map(li => parseInt(li.dataset.id));
-  
-  // Reorder tasks array based on DOM order
-  tasks.sort((a, b) => {
-    return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
+  // 📝 Inline edit handling
+const labelEl = li.querySelector('.task-label');
+const actionsToggle = document.getElementById('actionsToggle');
+
+// Only enable editing when toggle is ON
+if (actionsToggle.checked) {
+  labelEl.contentEditable = true;
+
+  labelEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showEditHint(labelEl);  // optional tooltip hint
   });
-  
-  // Save to localStorage
-  localStorage.setItem('tasks', JSON.stringify(tasks));
+
+  labelEl.addEventListener('blur', () => saveInlineEdit(task, labelEl));
+  labelEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      labelEl.blur(); // trigger save
+    } else if (e.key === 'Escape') {
+      labelEl.textContent = task.text; // revert
+      labelEl.blur();
+    }
+  });
+} else {
+  labelEl.contentEditable = false;
 }
+
+
+}
+ 
+
+function saveInlineEdit(task, labelEl) {
+  const newText = labelEl.textContent.trim();
+  if (newText) {
+    task.text = newText;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+  } else {
+    // Restore old text if empty
+    labelEl.textContent = task.text;
+  }
+}
+
+function formatDueDate(isoString) {
+  const date = new Date(isoString);
+  const now = new Date();
+
+  const isToday = date.toDateString() === now.toDateString();
+  const tomorrow = new Date();
+  tomorrow.setDate(now.getDate() + 1);
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+  const options = { hour: 'numeric', minute: '2-digit', hour12: true };
+  const timeStr = date.toLocaleTimeString([], options);
+
+  if (isToday) return `Today ${timeStr}`;
+  if (isTomorrow) return `Tomorrow ${timeStr}`;
+
+  const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${dateStr} ${timeStr}`;
+}
+
    
   // Toggle task completion  
   function toggleTask(id) {  
-    const task = tasks.find(t => t.id === id);  
-    if (task) {  
-      task.completed = !task.completed;  
-      renderTasks(); 
-    }  
-  }
+  const task = tasks.find(t => t.id === id);  
+  if (task) {  
+    task.completed = !task.completed;  
+    localStorage.setItem('tasks', JSON.stringify(tasks));  // ✅ Save immediately
+    renderTasks(); 
+  }  
+}
+
   
   // Delete task  
   function deleteTask(id) {  
@@ -431,7 +275,8 @@ iconsWrap.addEventListener('click', (e) => {
             id: Date.now(),  
             text,  
             category: currentFilter, // Always use current filter
-            completed: false  
+            completed: false ,
+            dueDate: null
         });
         input.value = '';  
         renderTasks();  
@@ -517,42 +362,50 @@ function getCategoryColor(categoryName) {
         }
         
         // Make category name editable when toggle is on
-        const toggle = document.getElementById('actionsToggle');
-        if (toggle.checked) {
-            btn.contentEditable = true;
-            btn.addEventListener('blur', () => {
-                const newName = btn.textContent.trim();
-                if (newName && newName !== cat.name && !customCategories.find(c => c.name === newName)) {
-                    // Update category name in customCategories
-                    cat.name = newName;
-                    // Update category name in all tasks
-                    tasks.forEach(task => {
-                        if (task.category === cat.name) {
-                            task.category = newName;
-                        }
-                    });
-                    // If we were filtering by this category, update currentFilter
-                    if (currentFilter === cat.name) {
-                        currentFilter = newName;
-                    }
-                    // Save changes
-                    localStorage.setItem('customCategories', JSON.stringify(customCategories));
-                    localStorage.setItem('tasks', JSON.stringify(tasks));
-                } else {
-                    // Revert if invalid
-                    btn.textContent = cat.name;
-                }
-            });
+        
             
-            btn.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    btn.blur();
+          // Make category name editable when toggle is on (but not for "All")
+const toggle = document.getElementById('actionsToggle');
+if (toggle.checked && cat.name !== 'All') {
+    btn.contentEditable = true;
+    btn.addEventListener('blur', () => {
+        const newName = btn.textContent.trim();
+        if (newName && newName !== cat.name && !customCategories.find(c => c.name === newName)) {
+            // Update category name in customCategories
+            const oldName = cat.name;
+            cat.name = newName;
+
+            // Update category name in all tasks
+            tasks.forEach(task => {
+                if (task.category === oldName) {
+                    task.category = newName;
                 }
             });
+
+            // If we were filtering by this category, update currentFilter
+            if (currentFilter === oldName) {
+                currentFilter = newName;
+            }
+
+            // Save changes
+            localStorage.setItem('customCategories', JSON.stringify(customCategories));
+            localStorage.setItem('tasks', JSON.stringify(tasks));
         } else {
-            btn.contentEditable = false;
+            // Revert if invalid
+            btn.textContent = cat.name;
         }
+    });
+
+    btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btn.blur();
+        }
+    });
+} else {
+    btn.contentEditable = false;
+}
+
         
         btnWrapper.appendChild(btn);
         filterContainer.appendChild(btnWrapper);
@@ -618,4 +471,148 @@ function getCategoryColor(categoryName) {
     setupCategoryModal();
   });
 
+let activeTaskId = null;
+let selectedDateISO = null;
+
+function openDateTimePopup(taskId) {
+  activeTaskId = taskId;
+  const task = tasks.find(t => t.id === taskId);
+  document.getElementById('dateTimeTaskInfo').textContent = `For: "${task.text}"`;
+  document.getElementById('selectedDateTimeText').textContent = 'No date & time selected';
+
+  const modal = document.getElementById('dateTimeModal');
+  modal.classList.add('show');     // ✅ trigger the transition
+  modal.classList.remove('hidden');
+
+  setTimeout(buildCalendar, 0);
+}
+
+document.getElementById('cancelDateTime').addEventListener('click', () => {
+  const modal = document.getElementById('dateTimeModal');
+  modal.classList.remove('show');
+  modal.classList.add('hidden');
+  selectedDateISO = null;
+});
+
+
+
+// 📝 Update summary whenever something changes
+function updateSummary() {
+  if (!selectedDateISO) {
+    document.getElementById('selectedDateTimeText').textContent = 'No date/time selected';
+    return;
+  }
+  const date = new Date(selectedDateISO);
+  const hour = document.getElementById('hourSelect').value;
+  const minute = document.getElementById('minuteSelect').value;
+  const ampm = document.getElementById('ampmSelect').value;
+
+  const displayTime = `${hour}:${minute} ${ampm}`;
+  const formatted = `${date.toDateString()} at ${displayTime}`;
+  document.getElementById('selectedDateTimeText').textContent = formatted;
+}
+
+// 📅 Calendar date click sets selectedDateISO
+function selectDate(iso) {
+  selectedDateISO = iso;
+  updateSummary();
+}
+
+
+//Popup for time and date and then month render 
+document.getElementById('saveDateTime').addEventListener('click', () => {
+  if (!activeTaskId || !selectedDateISO) return;
+  const task = tasks.find(t => t.id === activeTaskId);
+
+  const date = new Date(selectedDateISO);
+  let hour = parseInt(document.getElementById('hourSelect').value);
+  let minute = parseInt(document.getElementById('minuteSelect').value);
+  const ampm = document.getElementById('ampmSelect').value;
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+
+  date.setHours(hour);
+  date.setMinutes(minute);
+  date.setSeconds(0);
+
+  task.dueDate = date.toISOString();
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  renderTasks();
+  document.getElementById('dateTimeModal').classList.add('hidden');
+});
+
+
+
+function buildCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  const now = new Date();
+  let currentMonth = now.getMonth();
+  let currentYear = 2025; // fixed year as per requirement
+
+  renderCalendar(currentMonth, currentYear);
+
+  function renderCalendar(month, year) {
+    calendarEl.innerHTML = '';
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+
+    const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+    const header = document.createElement('div');
+    header.className = 'calendar-header';
+    header.innerHTML = `
+  <button id="prevMonth"><i data-lucide="chevron-left"></i></button>
+  <span>${monthName} ${year}</span>
+  <button id="nextMonth"><i data-lucide="chevron-right"></i></button>
+`;
+    calendarEl.appendChild(header);
+    lucide.createIcons();
+
+    const grid = document.createElement('div');
+    grid.className = 'calendar-grid';
+    for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cell = document.createElement('div');
+      cell.textContent = day;
+      cell.dataset.date = new Date(year, month, day).toISOString();
+      cell.classList.add('calendar-day');
+      cell.addEventListener('click', () => {
+  document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-date'));
+  cell.classList.add('selected-date');
+  selectDate(cell.dataset.date);
   
+});
+
+      grid.appendChild(cell);
+    }
+    calendarEl.appendChild(grid);
+
+    document.getElementById('prevMonth').onclick = () => {
+      if (month > 0) renderCalendar(month-1, year);
+    };
+    document.getElementById('nextMonth').onclick = () => {
+      if (month < 11) renderCalendar(month+1, year);
+    };
+  }
+}
+document.getElementById('hourSelect').addEventListener('change', updateSummary);
+document.getElementById('minuteSelect').addEventListener('change', updateSummary);
+document.getElementById('ampmSelect').addEventListener('change', updateSummary);
+
+function buildTimeDropdowns() {
+  const hourSelect = document.getElementById('hourSelect');
+  const minuteSelect = document.getElementById('minuteSelect');
+  for (let h = 1; h <= 12; h++) {
+    const opt = document.createElement('option');
+    opt.value = h;
+    opt.textContent = h;
+    hourSelect.appendChild(opt);
+  }
+  ['00','30'].forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    minuteSelect.appendChild(opt);
+  });
+}
+buildTimeDropdowns();
+

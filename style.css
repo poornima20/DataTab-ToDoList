@@ -25,6 +25,23 @@ body {
   }
 }
 
+/* 🌟 Global Lucide Icon Size */
+[data-lucide] {
+  width: 18px;     /* default size for all icons */
+  height: 18px;
+  stroke-width: 1.8; /* makes them look lighter and cleaner */
+  vertical-align: middle;
+}
+
+/* 📱 Optional: Make them smaller on mobile */
+@media (max-width: 480px) {
+  [data-lucide] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.6;
+  }
+}
+
 
 /* Tile and Toggle*/
 
@@ -300,6 +317,9 @@ input[type="checkbox"]:checked {
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
   color: #212121;
+  display: flex;
+  flex-direction: column;  /* 👈 ensures category goes below text */
+  gap: 4px;
 }
  
 
@@ -348,15 +368,9 @@ input[type="checkbox"]:checked {
   color: #9e9e9e;
   cursor: pointer;
 } 
-
-/*.completed-separator {
-  padding: 8px 0;
-  margin: 8px 0;
-  border-top: 1px solid #e0e0e0;
-  color: #9e9e9e;
-  font-size: 0.9em;
-}*/
- 
+.completed .task-meta-line {
+  display: none;
+}
 
 .left span {
   cursor: pointer;
@@ -454,6 +468,56 @@ footer{
   font-weight: 600;
   color: #333;
 }
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+}
+
+.time-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time-select select {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Line under task for date + category */
+.task-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.task-due-date {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.category-inline {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  background: #f1f1f1;
+}
+
+.task-meta-line > span {
+  display: inline-flex;
+  align-items: center;
+}
+
 
 /* Input Field */
 #newCategoryName {
@@ -562,35 +626,6 @@ footer{
 }
 
 
-/* Drag and Drop feature design*/
-.drag-handle {
-  cursor: move;
-  margin-right: 8px;
-  padding: 0 5px;
-  user-select: none;
-  opacity: 0.5;
-  touch-action: none; /* Important for touch devices */
-}
-
-.drag-handle:hover {
-  opacity: 1;
-}
-
-li.dragging {
-  opacity: 0.5;
-  background: #f0f0f0;
-  transform: scale(1.02);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-li.drag-over-above {
-  border-top: 3px solid #000000;
-}
-
-li.drag-over-below {
-  border-bottom: 3px solid #000000;
-}
-
 .category-wrapper {
     position: relative;
     display: inline-block;
@@ -648,6 +683,273 @@ button[contenteditable="true"] {
   color: #4caf50;  /* green ✅ */
 }
 
+.checkbox-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox-icon {
+  width: 22px;
+  height: 22px;
+  color: #777;   
+  transition: color .2s ease, transform .2s ease;
+}
+.checkbox-btn:hover .checkbox-icon { color: #444;}
+.completed .checkbox-icon { color: color: #666; }
 
 
+.edit-input {
+  font: inherit;
+  padding: 2px 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 220px;
+  outline: none;
+}
+.edit-input:focus {
+  border-color: #000;
+}
+
+.task-label[contenteditable="true"]:focus {
+  background: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+  outline: none;
+  color: #777;
+}
+.task-label {
+  cursor: default;
+}
+.task-label[contenteditable="true"] {
+  cursor: text;
+}
+
+/* ✨ DateTime Modal - Compact Two Column */
+.modal-datetime {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  background: white;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  z-index: 2000;
+  width: 350px;
+  max-width: 90%;
+  transform: translate(-50%, -50%) scale(0.95); /* initial scale */
+  opacity: 0;                                    /* initial opacity */
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  pointer-events: none; /* Prevent accidental clicks when hidden */
+}
+
+.modal-datetime.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
+
+
+.modal-datetime.hidden {
+  display: none;
+}
+
+.modal-datetime-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;                   /* tighter vertical spacing */
+}
+
+.modal-datetime-header h3 {
+  font-size: 1rem;
+}
+
+/* 📝 Header */
+.modal-datetime-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-datetime-header i {
+  width: 20px;
+  height: 20px;
+}
+
+#dateTimeTaskInfo {
+  font-size: 0.85rem;
+  margin: 0;
+  padding :0;
+}
+
+/* 📅 Two-column layout */
+.date-time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* Date on left, Time+Selected on right */
+  gap: 14px;
+  align-items: start;
+}
+
+.modal-section h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.modal-section h4 i {
+  width: 16px;
+  height: 16px;
+}
+
+/* 🗓 Calendar section */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+}
+
+.calendar-header button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.space {
+  padding-bottom: 14px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.calendar-day {
+  text-align: center;
+  padding: 5px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  transition: background 0.2s;
+}
+
+.calendar-day:hover {
+  background: #f2f2f2;
+}
+
+.calendar-day.selected-date {
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 🕑 Time select */
+.time-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time-select select {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* 📝 Summary */
+.summary {
+  background: #f9f9f9;
+  padding: 8px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+/* 🕑 Horizontal time selector */
+.time-select-inline {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.time-select-inline select {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+  background: #fafafa;
+  flex: 1;
+}
+
+/* ℹ️ Selected info aligned under time */
+.summary-inline {
+  background: #f8fafc;
+  padding: 8px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.summary-inline h4 {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.selected-datetime {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #444;
+}
+
+/* ✅ Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.modal-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#cancelDateTime {
+  background: white;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+#cancelDateTime:hover {
+  background: #f5f5f5;
+}
+
+#saveDateTime {
+  background: #000;
+  border: 1px solid #000;
+  color: white;
+}
+
+#saveDateTime:hover {
+  background: #333;
+}
 

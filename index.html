@@ -65,6 +65,63 @@
               </select>
               <button onclick="addTask()">Add</button>
           </div>
+<div id="dateTimeModal" class="modal-datetime hidden">
+  <div class="modal-datetime-content">
+
+    <!-- 📝 Header: Icon + Title -->
+     <div class="sched">
+    <div class="modal-datetime-header">
+      <i data-lucide="calendar-clock"></i>
+      <h3>Schedule Task</h3>      
+    </div>
+    <p id="dateTimeTaskInfo"></p>
+    </div>
+
+    <!-- 📅 Date & Time Row -->
+    <div class="date-time-row">
+      <!-- 📅 Date -->
+      <div class="modal-section">
+        <h4 class="space"><i data-lucide="calendar"></i> Date</h4>
+        <div id="calendar"></div>
+      </div>
+
+      <!-- 🕑 Time + Selected -->
+      <div class="modal-section time-column">
+        <h4 class="space"><i data-lucide="clock"></i> Time</h4>
+
+        <!-- ⏳ Horizontal time selection -->
+        <div class="time-select-inline">
+          <select id="hourSelect"></select>
+          <select id="minuteSelect"></select>
+          <select id="ampmSelect">
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </div>
+
+        <!-- ℹ️ Selected info BELOW time in same column -->
+        <div class="modal-section summary summary-inline">
+          <h4><i data-lucide="info"></i> Selected</h4>
+          <p id="selectedDateTimeText" class="selected-datetime">
+            No date/time selected
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Actions -->
+    <div class="modal-actions">
+      <button id="saveDateTime">Save</button>
+      <button id="cancelDateTime"> Cancel</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
          
           <ul id="taskList"></ul>
 
