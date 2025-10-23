@@ -260,20 +260,32 @@ function formatDueDate(isoString) {
   const date = new Date(isoString);
   const now = new Date();
 
+  // Detect Today & Tomorrow (keep these friendly)
   const isToday = date.toDateString() === now.toDateString();
   const tomorrow = new Date();
   tomorrow.setDate(now.getDate() + 1);
   const isTomorrow = date.toDateString() === tomorrow.toDateString();
 
-  const options = { hour: 'numeric', minute: '2-digit', hour12: true };
-  const timeStr = date.toLocaleTimeString([], options);
+  // Format time cleanly
+  const timeStr = date.toLocaleTimeString([], { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
 
-  if (isToday) return `Today ${timeStr}`;
-  if (isTomorrow) return `Tomorrow ${timeStr}`;
+  // Format date with weekday abbreviation
+  const dayStr = date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    weekday: 'short' 
+  });
 
-  const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return `${dateStr} ${timeStr}`;
+  // Return clean contextual string
+  if (isToday) return `Today  ${timeStr}`;
+  if (isTomorrow) return `Tomorrow  ${timeStr}`;
+  return `${dayStr}  ${timeStr}`;
 }
+
 
    
   // Toggle task completion  
