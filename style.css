@@ -440,6 +440,27 @@ footer{
 }
 
 
+.category-edit-btn {
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  background: #000;
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.category-wrapper:hover .category-edit-btn {
+  opacity: 1;
+}
 
 
 

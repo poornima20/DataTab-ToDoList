@@ -329,7 +329,8 @@ function getCategoryColor(categoryName) {
         btnWrapper.className = 'category-wrapper';
         
         const btn = document.createElement('button');
-         btn.id = 'newSectionName';
+        btn.className = 'category-button';
+        btn.id = 'newSectionName';
         btn.textContent = cat.name;
         btn.style.background = cat.color;
         btn.addEventListener('click', () => filterTasks(cat.name));
@@ -337,28 +338,17 @@ function getCategoryColor(categoryName) {
         
         // Add close button (only for non-default categories)
         if (cat.name !== 'All') {
-            const closeBtn = document.createElement('span');
-            closeBtn.className = 'category-close-btn';
-            closeBtn.innerHTML = '&#10006;';
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (confirm(`Delete category "${cat.name}" and all its tasks?`)) {
-                    // Delete tasks in this category first
-                    tasks = tasks.filter(task => task.category !== cat.name);
-                    // Then delete the category
-                    customCategories = customCategories.filter(c => c.name !== cat.name);
-                    // If we were filtering by this category, switch to All
-                    if (currentFilter === cat.name) {
-                        currentFilter = 'All';
-                        filterTasks('All');
-                    }
-                    renderCategoryFilters();
-                    // Save to localStorage
-                    localStorage.setItem('customCategories', JSON.stringify(customCategories));
-                    localStorage.setItem('tasks', JSON.stringify(tasks));
-                }
+                  // edit button (icon)
+            const editBtn = document.createElement('span');
+            editBtn.className = 'category-edit-btn';
+            editBtn.title = `Edit "${cat.name}"`;
+            editBtn.innerHTML = '&#9998;'; // pencil icon fallback
+            editBtn.style.cursor = 'pointer';
+            editBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openCategoryModal(cat.name); // open modal to edit this category
             });
-            btnWrapper.appendChild(closeBtn);
+            btnWrapper.appendChild(editBtn);
         }
         
         // Make category name editable when toggle is on
@@ -421,45 +411,182 @@ if (toggle.checked && cat.name !== 'All') {
     filterContainer.appendChild(addBtn);
 }
 
+function resetCategoryModal() {
+  const nameInput = document.getElementById('newCategoryName');
+  const deleteBtn = document.getElementById('deleteCategory');
+  const saveBtn = document.getElementById('saveCategory');
+  const colorOptions = document.querySelectorAll('.color');
+
+  // Clear name
+  nameInput.value = '';
+
+  // Hide delete button
+  deleteBtn.style.display = 'none';
+
+  // Reset save button text
+  saveBtn.textContent = 'Add';
+
+  // Clear color selections
+  colorOptions.forEach(el => el.classList.remove('selected'));
+
+  // Reset editing state
+  editingCategoryName = null;
+}
 
 
 
-  function setupCategoryModal() {
-    const modal = document.getElementById('categoryModal');
-    const cancel = document.getElementById('cancelCategory');
-    const save = document.getElementById('saveCategory');
-    const colorOptions = document.querySelectorAll('.color');
-  
-    let selectedColor = '#2f2f2f';
-  
-    colorOptions.forEach(c => {
-      c.addEventListener('click', () => {
-        colorOptions.forEach(el => el.classList.remove('selected'));
-        c.classList.add('selected');
-        selectedColor = c.dataset.color;
-      });
+// Track which category is being edited (null = create mode)
+let editingCategoryName = null;
+
+function setupCategoryModal() {
+  const modal = document.getElementById('categoryModal');
+  const cancel = document.getElementById('cancelCategory');
+  const save = document.getElementById('saveCategory');
+  const deleteBtn = document.getElementById('deleteCategory');
+  const colorOptions = document.querySelectorAll('.color');
+  const nameInput = document.getElementById('newCategoryName');
+
+   // Clear previous color selections
+  colorOptions.forEach(el => el.classList.remove('selected'));
+
+  // Allow color selection
+  colorOptions.forEach(c => {
+    c.addEventListener('click', () => {
+      colorOptions.forEach(el => el.classList.remove('selected'));
+      c.classList.add('selected');
+      selectedColor = c.dataset.color;
     });
-    cancel.addEventListener('click', () => {
-      modal.classList.add('hidden');
-      document.getElementById('newCategoryName').value = '';
-    });
-  
-    save.addEventListener('click', () => {
-      const name = document.getElementById('newCategoryName').value.trim();
-      if (name && !customCategories.find(c => c.name === name)) {
-        customCategories.push({ name, color: selectedColor });
-        renderCategoryFilters();
+  });
+
+  // Cancel
+  cancel.addEventListener('click', () => {
+  resetCategoryModal();
+  closeCategoryModal();
+});
+
+  // Save (create or rename)
+  save.addEventListener('click', () => {
+    const newName = nameInput.value.trim();
+    if (!document.querySelector('.color.selected')) {
+  return;
+}
+
+
+    // CREATE MODE
+    if (!editingCategoryName) {
+      if (customCategories.some(c => c.name.toLowerCase() === newName.toLowerCase())) {
+        alert('A category with this name already exists.');
+        return;
       }
 
-          // Save to localStorage
+      customCategories.push({ name: newName, color: selectedColor });
       localStorage.setItem('customCategories', JSON.stringify(customCategories));
+      renderCategoryFilters();
+      closeCategoryModal();
+      return;
+    }
 
-  
+    // EDIT MODE
+    const oldName = editingCategoryName;
+    const index = customCategories.findIndex(c => c.name === oldName);
+    if (index === -1) {
+      alert('Original category not found.');
+      return;
+    }
 
-      modal.classList.add('hidden');
-      document.getElementById('newCategoryName').value = '';
+    if (
+      newName !== oldName &&
+      customCategories.some(c => c.name.toLowerCase() === newName.toLowerCase())
+    ) {
+      alert('Another category with this name already exists.');
+      return;
+    }
+
+    // Update name & color
+    customCategories[index].name = newName;
+    customCategories[index].color = selectedColor;
+
+    // Update tasks using that category
+    tasks.forEach(t => {
+      if (t.category === oldName) t.category = newName;
     });
+
+    localStorage.setItem('customCategories', JSON.stringify(customCategories));
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderCategoryFilters();
+    renderTasks();
+    resetCategoryModal();
+    closeCategoryModal();
+  });
+
+  // Delete button
+  deleteBtn.addEventListener('click', () => {
+    if (!editingCategoryName) return;
+
+    const confirmDelete = confirm(
+      `Delete category "${editingCategoryName}" and all its tasks?`
+    );
+    if (!confirmDelete) return;
+
+    // Remove category and tasks
+    customCategories = customCategories.filter(c => c.name !== editingCategoryName);
+    tasks = tasks.filter(t => t.category !== editingCategoryName);
+
+    // Reset filter if viewing that category
+    if (currentFilter === editingCategoryName) currentFilter = 'All';
+
+    localStorage.setItem('customCategories', JSON.stringify(customCategories));
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderCategoryFilters();
+    renderTasks();
+    closeCategoryModal();
+  });
+}
+
+function openCategoryModal(categoryName) {
+  const modal = document.getElementById('categoryModal');
+  const deleteBtn = document.getElementById('deleteCategory');
+  const saveBtn = document.getElementById('saveCategory');
+  const nameInput = document.getElementById('newCategoryName');
+  const colorOptions = document.querySelectorAll('.color');
+
+  // Clear previous color selections
+  colorOptions.forEach(el => el.classList.remove('selected'));
+
+  if (!categoryName) {
+    // 🆕 CREATE MODE
+    editingCategoryName = null;
+    nameInput.value = ''; // empty field
+    deleteBtn.style.display = 'none'; // hide delete
+    saveBtn.textContent = 'Add'; // button label
+
+    // No default color selected — user chooses one manually
+  } else {
+    // ✏️ EDIT MODE
+    editingCategoryName = categoryName;
+    const cat = customCategories.find(c => c.name === categoryName);
+    if (!cat) return alert('Category not found.');
+
+    nameInput.value = cat.name;
+    deleteBtn.style.display = 'inline-block';
+    saveBtn.textContent = 'Save';
+
+    // Highlight the saved color for that category
+    const selected = Array.from(colorOptions).find(c => c.dataset.color === cat.color);
+    if (selected) selected.classList.add('selected');
   }
+
+  // Show the modal
+  modal.classList.remove('hidden');
+}
+
+
+// Helper: close modal
+function closeCategoryModal() {
+  const modal = document.getElementById('categoryModal');
+  modal.classList.add('hidden');
+  resetCategoryModal();
+}
 
 
   document.addEventListener('DOMContentLoaded', () => {
