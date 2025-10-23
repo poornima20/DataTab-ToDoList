@@ -464,9 +464,7 @@ footer{
 
 
 
-/* Pop UP Modal Design */
 
-.modal.hidden { display: none; }
 
 /* Modal Container */
 .modal {
@@ -573,13 +571,17 @@ footer{
   transition: transform 0.2s;
 }
 
-.color:hover {
+.color {
+  transition: transform 0.2s, border 0.2s;
+}
+
+.color:hover,
+.color.selected {
   transform: scale(1.1);
 }
 
 .color.selected {
   border: 2px solid #a3a3a3;
-  transform: scale(1.1);
 }
 
 /* Modal Actions */
@@ -587,6 +589,7 @@ footer{
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  margin-top: 6px;
 }
 
 .modal-actions button {
@@ -905,6 +908,10 @@ button[contenteditable="true"] {
   font-weight: 600;
 }
 
+/* 🔆 Highlight today's date */
+.calendar-day.today-date {
+  color: red;
+}
 /* 🕑 Time select */
 .time-select {
   display: flex;
@@ -962,22 +969,6 @@ button[contenteditable="true"] {
   color: #444;
 }
 
-/* ✅ Actions */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.modal-actions button {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
 #cancelDateTime {
   background: white;
@@ -1012,28 +1003,6 @@ button[contenteditable="true"] {
 
 .calendar-weekdays span {
   padding: 4px 0;
-}
-
-
-/* 🔔 Popup Notification (LeetCode-style aesthetic) */
-.popup {
-  position: fixed;
-  top: -80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #111;
-  color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.4s ease;
-  opacity: 0;
-  z-index: 9999;
-  min-width: 240px;
-  font-family: 'Inter', sans-serif;
 }
 
 .popup.show {
@@ -1081,8 +1050,11 @@ button[contenteditable="true"] {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
+  visibility: hidden;
+  opacity: 0;
 }
+
 
 /* ✨ Universal LeetCode-Style Popup (White Theme) */
 .popup {
@@ -1158,14 +1130,13 @@ button[contenteditable="true"] {
   background: #333;
 }
 
-.popup.hidden {
-  visibility: hidden;
-  opacity: 0;
-}
 .popup.hidden,
 .popup-actions.hidden {
   display: none !important;
+  opacity: 0;
+  visibility: hidden;
 }
+
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -1188,10 +1159,7 @@ button[contenteditable="true"] {
   transition: opacity 0.3s ease;
 }
 
-/* 🔆 Highlight today's date */
-.calendar-day.today-date {
-  color: red;
-}
+
 
 /* 🧹 Reset link style */
 .reset-datetime-link {
@@ -1208,19 +1176,10 @@ button[contenteditable="true"] {
   color: #000;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
 
 .button-group {
   display: flex;
   gap: 10px;
 }
 
-.readonly-task {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
