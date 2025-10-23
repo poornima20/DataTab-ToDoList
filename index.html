@@ -60,11 +60,15 @@
           </div>
 
           <!-- for adding lists -->
+           <p id="currentCategoryLabel" class="current-category-label"></p>
           <div class="input-group">
               <input type="text" id="taskInput" placeholder="Select a category from above ..." disabled>
               </select>
               <button onclick="addTask()">Add</button>
+              
           </div>
+          
+
 <div id="dateTimeModal" class="modal-datetime hidden">
   <div class="modal-datetime-content">
 
@@ -111,6 +115,7 @@
 
     <!-- ✅ Actions -->
     <div class="modal-actions">
+      <a id="resetDateTime" class="reset-datetime-link" href="#">Reset Time</a>
       <button id="saveDateTime">Save</button>
       <button id="cancelDateTime"> Cancel</button>
     </div>

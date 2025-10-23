@@ -999,6 +999,22 @@ button[contenteditable="true"] {
   background: #333;
 }
 
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #555;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.calendar-weekdays span {
+  padding: 4px 0;
+}
+
+
 /* 🔔 Popup Notification (LeetCode-style aesthetic) */
 .popup {
   position: fixed;
@@ -1163,3 +1179,48 @@ button[contenteditable="true"] {
 }
 
 
+.current-category-label {
+  font-size: 0.65rem;
+  color: #777;
+  text-align: center;
+  letter-spacing: 0.3px;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+/* 🔆 Highlight today's date */
+.calendar-day.today-date {
+  color: red;
+}
+
+/* 🧹 Reset link style */
+.reset-datetime-link {
+  font-size: 0.8rem;
+  color: #555;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-right: auto;
+  align-self: center;
+  transition: color 0.2s ease;
+}
+
+.reset-datetime-link:hover {
+  color: #000;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.readonly-task {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

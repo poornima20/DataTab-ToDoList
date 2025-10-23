@@ -210,16 +210,17 @@ li.innerHTML = `
 
 
   // 📝 Inline edit handling
+// 📝 Inline edit handling
 const labelEl = li.querySelector('.task-label');
 const actionsToggle = document.getElementById('actionsToggle');
 
-// Only enable editing when toggle is ON
-if (actionsToggle.checked) {
+// Allow editing only if toggle is ON AND task is NOT completed
+if (actionsToggle.checked && !task.completed) {
   labelEl.contentEditable = true;
 
   labelEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    showEditHint(labelEl);  // optional tooltip hint
+    showEditHint(labelEl); // optional tooltip hint
   });
 
   labelEl.addEventListener('blur', () => saveInlineEdit(task, labelEl));
@@ -233,8 +234,11 @@ if (actionsToggle.checked) {
     }
   });
 } else {
+  // Prevent editing if completed
   labelEl.contentEditable = false;
+  labelEl.classList.add('readonly-task');
 }
+
 
 
 }
@@ -401,6 +405,7 @@ function getCategoryColor(categoryName) {
 function filterTasks(category) {
   currentFilter = category;
   const taskInput = document.getElementById('taskInput');
+  const label = document.getElementById('currentCategoryLabel');
 
   document.querySelectorAll('.filters button').forEach(btn => {
     btn.classList.toggle('active', btn.textContent === category);
@@ -415,10 +420,11 @@ function filterTasks(category) {
     taskInput.disabled = false;
   }
 
+  // ✅ Always show category name (even for All)
+  label.textContent = `Selected Category: ${category}`;
+
   renderTasks();
 }
-
-
 
 
  function renderCategoryFilters() {
@@ -813,6 +819,22 @@ document.getElementById('saveDateTime').addEventListener('click', () => {
   document.getElementById('dateTimeModal').classList.add('hidden');
 });
 
+// 🧹 Reset date/time selection
+document.getElementById('resetDateTime').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!activeTaskId) return;
+
+  const task = tasks.find(t => t.id === activeTaskId);
+  if (task && task.dueDate) {
+    task.dueDate = null;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+
+    document.getElementById('selectedDateTimeText').textContent = 'No date/time selected';
+    showPopup('Task time cleared 🧭', { icon: 'undo-2' });
+  }
+});
+
 
 
 function buildCalendar() {
@@ -825,37 +847,71 @@ function buildCalendar() {
 
   function renderCalendar(month, year) {
     calendarEl.innerHTML = '';
-    const firstDay = new Date(year, month).getDay();
-    const daysInMonth = new Date(year, month+1, 0).getDate();
 
-    const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
-    const header = document.createElement('div');
-    header.className = 'calendar-header';
-    header.innerHTML = `
+let firstDay = new Date(year, month).getDay();
+// Shift Sunday (0) to the end to make Monday the first day
+firstDay = (firstDay === 0) ? 6 : firstDay - 1;
+const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+
+// 🗓 Month + year header
+const header = document.createElement('div');
+header.className = 'calendar-header';
+header.innerHTML = `
   <button id="prevMonth"><i data-lucide="chevron-left"></i></button>
   <span>${monthName} ${year}</span>
   <button id="nextMonth"><i data-lucide="chevron-right"></i></button>
 `;
-    calendarEl.appendChild(header);
-    lucide.createIcons();
+calendarEl.appendChild(header);
+lucide.createIcons();
 
-    const grid = document.createElement('div');
-    grid.className = 'calendar-grid';
+// 🧭 Add weekday names row
+const weekdays = document.createElement('div');
+weekdays.className = 'calendar-weekdays';
+weekdays.innerHTML = `
+  <span>M</span>
+  <span>T</span>
+  <span>W</span>
+  <span>T</span>
+  <span>F</span>
+  <span>S</span>
+  <span>S</span>
+`;
+calendarEl.appendChild(weekdays);
+
+// 📅 Date grid
+const grid = document.createElement('div');
+grid.className = 'calendar-grid';
+
     for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-    for (let day = 1; day <= daysInMonth; day++) {
-      const cell = document.createElement('div');
-      cell.textContent = day;
-      cell.dataset.date = new Date(year, month, day).toISOString();
-      cell.classList.add('calendar-day');
-      cell.addEventListener('click', () => {
-  document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-date'));
-  cell.classList.add('selected-date');
-  selectDate(cell.dataset.date);
-  
-});
+    const today = new Date(); // current day reference
 
-      grid.appendChild(cell);
-    }
+for (let day = 1; day <= daysInMonth; day++) {
+  const cell = document.createElement('div');
+  cell.textContent = day;
+  const cellDate = new Date(year, month, day);
+  cell.dataset.date = cellDate.toISOString();
+  cell.classList.add('calendar-day');
+
+  // 🔆 Highlight today's date
+  if (
+    cellDate.getDate() === today.getDate() &&
+    cellDate.getMonth() === today.getMonth() &&
+    cellDate.getFullYear() === today.getFullYear()
+  ) {
+    cell.classList.add('today-date');
+  }
+
+  cell.addEventListener('click', () => {
+    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-date'));
+    cell.classList.add('selected-date');
+    selectDate(cell.dataset.date);
+  });
+
+  grid.appendChild(cell);
+}
+
     calendarEl.appendChild(grid);
 
     document.getElementById('prevMonth').onclick = () => {
