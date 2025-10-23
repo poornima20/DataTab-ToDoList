@@ -37,7 +37,7 @@
           <!-- Pop up for adding categories-->
           <div id="categoryModal" class="modal hidden">
             <div class="modal-content">
-              <h3>Add New Category</h3>
+              <h3 id="categoryModalTitle">Add New Category</h3>
               <input type="text" id="newCategoryName" placeholder="Category name">
               <div class="color-options">
                 <span class="color" data-color="#FBF8CC" style="background:#FBF8CC"></span>
@@ -126,6 +126,20 @@
           <ul id="taskList"></ul>
 
         </div> 
+
+        <!-- Popup Notification -->
+<div id="popupNotification" class="popup hidden">
+  <div class="popup-content">
+    <i id="popupIcon" data-lucide="sparkles"></i>
+    <div class="popup-text">
+      <p id="popupMessage">This is a notification</p>
+      <div id="popupActions" class="popup-actions hidden">
+        <button id="popupConfirm">Yes</button>
+        <button id="popupCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
         <footer class="footer">
           <p>© 2025 Fullmoon</p>

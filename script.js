@@ -71,39 +71,68 @@ let tasks = [
     const list = document.getElementById('taskList');  
     list.innerHTML = '';  
 
-    const filtered = tasks.filter(task => currentFilter === 'All' || task.category === currentFilter);   
+    let filtered = tasks.filter(task => currentFilter === 'All' || task.category === currentFilter);
+
+    // ✅ Sort by due date — earliest first, then tasks without due date
+    filtered.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1; // tasks with no due date go to bottom
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
 
     document.querySelectorAll('.task-category').forEach(el => {
     el.style.display = currentFilter === 'All' ? 'inline' : 'none';
     });
   
-    // Separate active and completed tasks  
-    const activeTasks = filtered.filter(task => !task.completed);  
-    const completedTasks = filtered.filter(task => task.completed);  
-    
-    // Render active tasks  
-    activeTasks.forEach(task => {  
-      createTaskElement(task, list);  
-    });
-  
-   
-     // Add completed section banner if there are completed tasks
-    if (completedTasks.length > 0) {
-      const completedHeader = document.createElement('div');
-      completedHeader.className = 'completed-section-header';
-      completedHeader.innerHTML = `
-      <i data-lucide="check-circle" class="completed-icon"></i>
-      Completed Tasks
-    `;
-      list.appendChild(completedHeader);
-      lucide.createIcons();
-    }
+    // Separate overdue, active, and completed tasks
+const now = new Date();
+const overdueTasks = filtered.filter(task => task.dueDate && new Date(task.dueDate) < now && !task.completed);
+const activeTasks = filtered.filter(task => !task.completed && (!task.dueDate || new Date(task.dueDate) >= now));
+const completedTasks = filtered.filter(task => task.completed);
 
-    // Render completed tasks  
-    completedTasks.forEach(task => {  
-      createTaskElement(task, list);  
-    });   
-  
+// ✅ Render Overdue Tasks first
+if (overdueTasks.length > 0) {
+  const overdueHeader = document.createElement('div');
+  overdueHeader.className = 'overdue-section-header';
+  overdueHeader.innerHTML = `
+    <i data-lucide="alert-triangle" class="overdue-icon"></i>
+    Overdue Tasks
+  `;
+  list.appendChild(overdueHeader);
+  lucide.createIcons();
+
+  overdueTasks.forEach(task => createTaskElement(task, list));
+}
+
+// ✅ Then render Active Tasks
+if (activeTasks.length > 0) {
+  const activeHeader = document.createElement('div');
+  activeHeader.className = 'active-section-header';
+  activeHeader.innerHTML = `
+    <i data-lucide="clock" class="active-icon"></i>
+    Upcoming Tasks
+  `;
+  list.appendChild(activeHeader);
+  lucide.createIcons();
+
+  activeTasks.forEach(task => createTaskElement(task, list));
+}
+
+// ✅ Then your Completed Tasks section (keep existing)
+if (completedTasks.length > 0) {
+  const completedHeader = document.createElement('div');
+  completedHeader.className = 'completed-section-header';
+  completedHeader.innerHTML = `
+    <i data-lucide="check-circle" class="completed-icon"></i>
+    Completed Tasks
+  `;
+  list.appendChild(completedHeader);
+  lucide.createIcons();
+
+  completedTasks.forEach(task => createTaskElement(task, list));
+}
+
      
     // Save to localStorage  
     localStorage.setItem('tasks', JSON.stringify(tasks));  
@@ -255,10 +284,79 @@ function formatDueDate(isoString) {
 
   
   // Delete task  
-  function deleteTask(id) {  
-    tasks = tasks.filter(task => task.id !== id);  
-    renderTasks();  
+async function deleteTask(id) {
+  const task = tasks.find(t => t.id === id);
+  const confirmed = await showPopup(`Delete task "${task.text}"?`, { 
+    confirm: true,
+    icon: 'trash-2'
+  });
+  if (!confirmed) return;
+
+  tasks = tasks.filter(task => task.id !== id);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  renderTasks();
+
+  showPopup('Task deleted 🗑️', { icon: 'check', duration: 2000 });
+}
+
+
+
+// ✅ Always-white popup with Lucide icons (no unwanted buttons)
+function showPopup(message, options = {}) {
+  const popup = document.getElementById('popupNotification');
+  const messageEl = document.getElementById('popupMessage');
+  const actionsEl = document.getElementById('popupActions');
+  const confirmBtn = document.getElementById('popupConfirm');
+  const cancelBtn = document.getElementById('popupCancel');
+  const iconEl = document.getElementById('popupIcon');
+
+  // Always white theme
+  popup.style.background = '#fff';
+  popup.style.color = '#000';
+  messageEl.style.color = '#000';
+  iconEl.style.color = '#000';
+
+  // Set text + icon
+  messageEl.textContent = message;
+  iconEl.setAttribute('data-lucide', options.icon || 'sparkles');
+  lucide.createIcons();
+
+  // Reset popup completely before reuse
+  popup.classList.remove('hidden', 'show');
+  actionsEl.classList.add('hidden');
+  confirmBtn.onclick = null;
+  cancelBtn.onclick = null;
+
+  // ✅ Confirm popup (for delete only)
+  if (options.confirm === true) {
+    actionsEl.classList.remove('hidden');
+    popup.classList.add('show');
+    return new Promise((resolve) => {
+      confirmBtn.onclick = () => {
+        popup.classList.remove('show');
+        setTimeout(() => popup.classList.add('hidden'), 300);
+        resolve(true);
+      };
+      cancelBtn.onclick = () => {
+        popup.classList.remove('show');
+        setTimeout(() => popup.classList.add('hidden'), 300);
+        resolve(false);
+      };
+    });
   }
+
+  // ✅ Normal popup (auto-hide, no buttons)
+  popup.classList.add('show');
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => popup.classList.add('hidden'), 300);
+  }, options.duration || 2500);
+}
+
+
+
+
+
   
   // Add new task  
  function addTask() {  
@@ -266,9 +364,10 @@ function formatDueDate(isoString) {
     const text = input.value.trim();
     
     if (currentFilter === 'All') {
-        alert('Please select a category before adding a task');
-        return;
-    }
+    showPopup('Please select a category to add the Task ', { icon: 'sparkles' });
+    return;
+}
+
     
     if (text !== '') {  
         tasks.push({  
@@ -299,31 +398,35 @@ function getCategoryColor(categoryName) {
 }
   
   // Filter tasks  
-  function filterTasks(category) {
-    currentFilter = category;
-    const taskInput = document.getElementById('taskInput');
-    
-    document.querySelectorAll('.filters button').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent === category);
-    });
-    
-    // Enable/disable input based on category selection
-    if (category === 'All') {
-        taskInput.placeholder = "Select a category from above ...";
-        taskInput.disabled = true;
-    } else {
-        taskInput.placeholder = "Add a new task..."; 
-        taskInput.disabled = false;
-    }
-    renderTasks();
+function filterTasks(category) {
+  currentFilter = category;
+  const taskInput = document.getElementById('taskInput');
+
+  document.querySelectorAll('.filters button').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === category);
+  });
+
+  // Enable/disable input based on category selection
+  if (category === 'All') {
+    taskInput.placeholder = "Select a category from above ...";
+    taskInput.disabled = true;
+  } else {
+    taskInput.placeholder = "Add a new task...";
+    taskInput.disabled = false;
+  }
+
+  renderTasks();
 }
+
 
 
 
  function renderCategoryFilters() {
     const filterContainer = document.getElementById('categoryFilters');
     filterContainer.innerHTML = ''; // Only clear once
-    
+
+    const toggle = document.getElementById('actionsToggle');
+    const showRecycle = toggle.checked; 
     customCategories.forEach(cat => {
         const btnWrapper = document.createElement('div');
         btnWrapper.className = 'category-wrapper';
@@ -354,7 +457,7 @@ function getCategoryColor(categoryName) {
         // Make category name editable when toggle is on
         
             
-          // Make category name editable when toggle is on (but not for "All")
+  
 const toggle = document.getElementById('actionsToggle');
 if (toggle.checked && cat.name !== 'All') {
     btn.contentEditable = true;
@@ -371,6 +474,8 @@ if (toggle.checked && cat.name !== 'All') {
                     task.category = newName;
                 }
             });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            saveCategories();
 
             // If we were filtering by this category, update currentFilter
             if (currentFilter === oldName) {
@@ -380,6 +485,7 @@ if (toggle.checked && cat.name !== 'All') {
             // Save changes
             localStorage.setItem('customCategories', JSON.stringify(customCategories));
             localStorage.setItem('tasks', JSON.stringify(tasks));
+
         } else {
             // Revert if invalid
             btn.textContent = cat.name;
@@ -431,6 +537,9 @@ function resetCategoryModal() {
 
   // Reset editing state
   editingCategoryName = null;
+
+  document.getElementById('categoryModalTitle').textContent = 'Add New Category';
+
 }
 
 
@@ -464,60 +573,90 @@ function setupCategoryModal() {
   closeCategoryModal();
 });
 
-  // Save (create or rename)
-  save.addEventListener('click', () => {
-    const newName = nameInput.value.trim();
-    if (!document.querySelector('.color.selected')) {
-  return;
-}
+save.addEventListener('click', () => {
+  const newName = nameInput.value.trim();
+  const selectedColor = document.querySelector('.color.selected')?.dataset.color;
 
+  // 🚫 Validation rules
+  if (!newName) {
+    showPopup('Please enter a category name 📝', { icon: 'alert-circle' });
+    return;
+  }
 
-    // CREATE MODE
-    if (!editingCategoryName) {
-      if (customCategories.some(c => c.name.toLowerCase() === newName.toLowerCase())) {
-        alert('A category with this name already exists.');
-        return;
-      }
+  if (!selectedColor) {
+    showPopup('Please select a color 🎨', { icon: 'alert-circle' });
+    return;
+  }
 
-      customCategories.push({ name: newName, color: selectedColor });
-      localStorage.setItem('customCategories', JSON.stringify(customCategories));
-      renderCategoryFilters();
-      closeCategoryModal();
+  // ✅ CREATE MODE
+  if (!editingCategoryName) {
+    // Check for duplicate names (case-insensitive)
+    const duplicate = customCategories.some(
+      c => c.name.toLowerCase() === newName.toLowerCase()
+    );
+
+    if (duplicate) {
+      showPopup('A category with this name already exists 🚫', { icon: 'alert-triangle' });
       return;
     }
 
-    // EDIT MODE
-    const oldName = editingCategoryName;
-    const index = customCategories.findIndex(c => c.name === oldName);
-    if (index === -1) {
-      alert('Original category not found.');
-      return;
-    }
-
-    if (
-      newName !== oldName &&
-      customCategories.some(c => c.name.toLowerCase() === newName.toLowerCase())
-    ) {
-      alert('Another category with this name already exists.');
-      return;
-    }
-
-    // Update name & color
-    customCategories[index].name = newName;
-    customCategories[index].color = selectedColor;
-
-    // Update tasks using that category
-    tasks.forEach(t => {
-      if (t.category === oldName) t.category = newName;
-    });
-
-    localStorage.setItem('customCategories', JSON.stringify(customCategories));
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    renderCategoryFilters();
-    renderTasks();
-    resetCategoryModal();
-    closeCategoryModal();
+      // Add new category (no id)
+  customCategories.push({
+    name: newName,
+    color: selectedColor
   });
+
+
+    saveCategories();
+    renderCategoryFilters();
+
+    showPopup(`Category "${newName}" created 🎉`, { icon: 'check' });
+    closeCategoryModal();
+    return;
+  }
+
+  // ✅ EDIT MODE
+  const oldName = editingCategoryName;
+  const index = customCategories.findIndex(c => c.name === oldName);
+
+  if (index === -1) {
+    showPopup('Original category not found ❌', { icon: 'x-circle' });
+    return;
+  }
+
+  // Prevent duplicate name (ignoring case, but allow if it's the same category being edited)
+  const duplicate = customCategories.some(
+    (c, i) =>
+      i !== index &&
+      c.name.toLowerCase() === newName.toLowerCase()
+  );
+
+  if (duplicate) {
+    showPopup('A category with this name already exists 🚫', { icon: 'alert-triangle' });
+    return;
+  }
+
+  // ✅ Update category name and color
+  customCategories[index].name = newName;
+  customCategories[index].color = selectedColor;
+
+  // ✅ Update all tasks that used this category
+  tasks.forEach(task => {
+    if (task.category === oldName) task.category = newName;
+  });
+
+  saveCategories();
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  renderCategoryFilters();
+  renderTasks();
+
+  showPopup(`Category "${newName}" updated ✅`, { icon: 'check' });
+  resetCategoryModal();
+  closeCategoryModal();
+});
+
+
+
 
   // Delete button
   deleteBtn.addEventListener('click', () => {
@@ -530,6 +669,7 @@ function setupCategoryModal() {
 
     // Remove category and tasks
     customCategories = customCategories.filter(c => c.name !== editingCategoryName);
+    saveCategories();
     tasks = tasks.filter(t => t.category !== editingCategoryName);
 
     // Reset filter if viewing that category
@@ -543,12 +683,16 @@ function setupCategoryModal() {
   });
 }
 
+
+
+
 function openCategoryModal(categoryName) {
   const modal = document.getElementById('categoryModal');
   const deleteBtn = document.getElementById('deleteCategory');
   const saveBtn = document.getElementById('saveCategory');
   const nameInput = document.getElementById('newCategoryName');
   const colorOptions = document.querySelectorAll('.color');
+  const modalTitle = document.getElementById('categoryModalTitle');
 
   // Clear previous color selections
   colorOptions.forEach(el => el.classList.remove('selected'));
@@ -559,6 +703,9 @@ function openCategoryModal(categoryName) {
     nameInput.value = ''; // empty field
     deleteBtn.style.display = 'none'; // hide delete
     saveBtn.textContent = 'Add'; // button label
+    modalTitle.textContent = 'Add New Category';
+    // make sure modal resets cleanly every time
+    resetCategoryModal();
 
     // No default color selected — user chooses one manually
   } else {
@@ -570,11 +717,13 @@ function openCategoryModal(categoryName) {
     nameInput.value = cat.name;
     deleteBtn.style.display = 'inline-block';
     saveBtn.textContent = 'Save';
+    modalTitle.textContent = 'Edit Category'; // ✅ Title update
 
     // Highlight the saved color for that category
     const selected = Array.from(colorOptions).find(c => c.dataset.color === cat.color);
     if (selected) selected.classList.add('selected');
-  }
+  }  
+
 
   // Show the modal
   modal.classList.remove('hidden');
@@ -588,15 +737,11 @@ function closeCategoryModal() {
   resetCategoryModal();
 }
 
+function saveCategories() {
+  localStorage.setItem('customCategories', JSON.stringify(customCategories));
+}
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const stored = localStorage.getItem('customCategories');
-  if (stored) {
-    customCategories = JSON.parse(stored);
-  }
-    renderCategoryFilters();
-    setupCategoryModal();
-  });
+
 
 let activeTaskId = null;
 let selectedDateISO = null;
@@ -742,4 +887,5 @@ function buildTimeDropdowns() {
   });
 }
 buildTimeDropdowns();
+
 
