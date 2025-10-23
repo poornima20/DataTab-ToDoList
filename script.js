@@ -444,7 +444,7 @@ function filterTasks(category) {
     filterContainer.innerHTML = ''; // Only clear once
 
     const toggle = document.getElementById('actionsToggle');
-    const showRecycle = toggle.checked; 
+    
     customCategories.forEach(cat => {
         const btnWrapper = document.createElement('div');
         btnWrapper.className = 'category-wrapper';
@@ -457,7 +457,7 @@ function filterTasks(category) {
         btn.addEventListener('click', () => filterTasks(cat.name));
         if (currentFilter === cat.name) btn.classList.add('active');
         
-        // Add close button (only for non-default categories)
+        // ✏️ Add edit icon — opens popup only (no inline editing)
         if (cat.name !== 'All') {
                   // edit button (icon)
             const editBtn = document.createElement('span');
@@ -475,50 +475,8 @@ function filterTasks(category) {
         // Make category name editable when toggle is on
         
             
-  
-const toggle = document.getElementById('actionsToggle');
-if (toggle.checked && cat.name !== 'All') {
-    btn.contentEditable = true;
-    btn.addEventListener('blur', () => {
-        const newName = btn.textContent.trim();
-        if (newName && newName !== cat.name && !customCategories.find(c => c.name === newName)) {
-            // Update category name in customCategories
-            const oldName = cat.name;
-            cat.name = newName;
 
-            // Update category name in all tasks
-            tasks.forEach(task => {
-                if (task.category === oldName) {
-                    task.category = newName;
-                }
-            });
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            saveCategories();
-
-            // If we were filtering by this category, update currentFilter
-            if (currentFilter === oldName) {
-                currentFilter = newName;
-            }
-
-            // Save changes
-            localStorage.setItem('customCategories', JSON.stringify(customCategories));
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-
-        } else {
-            // Revert if invalid
-            btn.textContent = cat.name;
-        }
-    });
-
-    btn.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            btn.blur();
-        }
-    });
-} else {
     btn.contentEditable = false;
-}
 
         
         btnWrapper.appendChild(btn);
